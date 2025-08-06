@@ -1,0 +1,52 @@
+document.addEventListener("DOMContentLoaded", () => {
+  const pokemonList = document.getElementById("pokemon-list");
+  const modalTitle = document.getElementById("pokemonModalLabel");
+  const modalImage = document.getElementById("modal-image");
+  const modalHeight = document.getElementById("modal-height");
+
+  // Show loading message
+  const loadingItem = document.createElement("li");
+  loadingItem.textContent = "Loading Pokémon...";
+  loadingItem.classList.add("list-group-item", "text-center");
+  pokemonList.appendChild(loadingItem);
+
+  // Fetch first 150 Pokémon
+  fetch("https://pokeapi.co/api/v2/pokemon?limit=150")
+    .then(response => response.json())
+    .then(data => {
+      pokemonList.innerHTML = ""; // Clear loading message
+
+      data.results.forEach(pokemon => {
+        fetch(pokemon.url)
+          .then(res => res.json())
+          .then(details => {
+            const li = document.createElement("li");
+            li.textContent = capitalize(details.name);
+            li.classList.add("list-group-item", "list-hover");
+
+            li.addEventListener("click", () => {
+              modalTitle.textContent = capitalize(details.name);
+              modalImage.src = details.sprites.front_default || "";
+              modalImage.alt = `${capitalize(details.name)} image`;
+              modalHeight.textContent = `Height: ${details.height / 10} m`;
+
+              const modal = new bootstrap.Modal(document.getElementById("pokemonModal"));
+              modal.show();
+            });
+
+            pokemonList.appendChild(li);
+          })
+          .catch(error => {
+            console.error("Error fetching Pokémon details:", error);
+          });
+      });
+    })
+    .catch(error => {
+      console.error("Error fetching Pokémon list:", error);
+      loadingItem.textContent = "Failed to load Pokémon.";
+    });
+
+  function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+});
